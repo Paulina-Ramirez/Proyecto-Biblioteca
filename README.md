@@ -7,55 +7,57 @@ Sistema de Gestión de Biblioteca desarrollado con **FastAPI**, **SQLAlchemy** y
 ## Arquitectura del Proyecto
 
 Este proyecto implementa el patrón **N-Tier** con las siguientes capas:
-┌─────────────────────────────────────────┐
-│ CAPA DE PRESENTACIÓN (routers/) │ ← Endpoints HTTP
-├─────────────────────────────────────────┤
-│ CAPA DE LÓGICA (services/) │ ← Reglas de negocio
-├─────────────────────────────────────────┤
-│ CAPA DE DATOS (repositories/) │ ← Acceso a la BD
-├─────────────────────────────────────────┤
-│ BASE DE DATOS (models/) │ ← SQL Server
-└─────────────────────────────────────────┘
 
-text
+```
+┌─────────────────────────────────────────┐
+│   CAPA DE PRESENTACIÓN (routers/)       │  ← Endpoints HTTP
+├─────────────────────────────────────────┤
+│   CAPA DE LÓGICA (services/)            │  ← Reglas de negocio
+├─────────────────────────────────────────┤
+│   CAPA DE DATOS (repositories/)         │  ← Acceso a la BD
+├─────────────────────────────────────────┤
+│   BASE DE DATOS (models/)               │  ← SQL Server
+└─────────────────────────────────────────┘
+```
 
 ### Estructura de carpetas
+
+```
 Proyecto-Biblioteca/
 │
 ├── app/
-│ ├── config/ # Configuración (conexión BD)
-│ │ └── database.py
-│ ├── models/ # Entidades SQLAlchemy
-│ │ ├── libro.py
-│ │ ├── usuario.py
-│ │ ├── prestamo.py
-│ │ └── sancion.py
-│ ├── repositories/ # Capa de acceso a datos (CRUD)
-│ │ ├── libro_repository.py
-│ │ ├── usuario_repository.py
-│ │ ├── prestamo_repository.py
-│ │ └── sancion_repository.py
-│ ├── schemas/ # Validación de datos (Pydantic)
-│ │ ├── libro_schema.py
-│ │ ├── usuario_schema.py
-│ │ ├── prestamo_schema.py
-│ │ └── sancion_schema.py
-│ ├── routers/ # Endpoints HTTP (FastAPI)
-│ │ ├── libro_router.py
-│ │ ├── usuario_router.py
-│ │ ├── prestamo_router.py
-│ │ └── sancion_router.py
-│ └── main.py # Punto de entrada
+│   ├── config/           # Configuración (conexión BD)
+│   │   └── database.py
+│   ├── models/           # Entidades SQLAlchemy
+│   │   ├── libro.py
+│   │   ├── usuario.py
+│   │   ├── prestamo.py
+│   │   └── sancion.py
+│   ├── repositories/     # Capa de acceso a datos (CRUD)
+│   │   ├── libro_repository.py
+│   │   ├── usuario_repository.py
+│   │   ├── prestamo_repository.py
+│   │   └── sancion_repository.py
+│   ├── schemas/          # Validación de datos (Pydantic)
+│   │   ├── libro_schema.py
+│   │   ├── usuario_schema.py
+│   │   ├── prestamo_schema.py
+│   │   └── sancion_schema.py
+│   ├── routers/          # Endpoints HTTP (FastAPI)
+│   │   ├── libro_router.py
+│   │   ├── usuario_router.py
+│   │   ├── prestamo_router.py
+│   │   └── sancion_router.py
+│   └── main.py           # Punto de entrada
 │
 ├── database/
-│ └── schema.sql # Script SQL Server
+│   └── schema.sql        # Script SQL Server
 │
-├── tests/ # Pruebas unitarias
-├── requirements.txt # Dependencias Python
+├── tests/                # Pruebas unitarias
+├── requirements.txt      # Dependencias Python
 ├── .gitignore
 └── README.md
-
-
+```
 
 ---
 
@@ -86,7 +88,7 @@ Antes de empezar, asegúrate de tener instalado:
 
 ---
 
-## 🚀 Guía de Instalación
+## Guía de Instalación
 
 ### Paso 1: Clonar el repositorio
 
@@ -95,11 +97,17 @@ Abre **PowerShell** en la carpeta donde quieras el proyecto y ejecuta:
 ```bash
 git clone https://github.com/Paulina-Ramirez/Proyecto-Biblioteca.git
 cd Proyecto-Biblioteca
-Paso 2: Cambiar a la rama de trabajo
-bash
+```
+
+### Paso 2: Cambiar a la rama de trabajo
+
+```bash
 git checkout develop
-Paso 3: Crear y activar el entorno virtual
-bash
+```
+
+### Paso 3: Crear y activar el entorno virtual
+
+```bash
 # Crear el entorno virtual
 python -m venv venv
 
@@ -109,62 +117,172 @@ venv\Scripts\activate
 
 # En Git Bash:
 source venv/Scripts/activate
-Sabrás que está activado porque verás (venv) al inicio de tu terminal.
+```
 
-Paso 4: Instalar dependencias
-bash
+Sabrás que está activado porque verás `(venv)` al inicio de tu terminal.
+
+### Paso 4: Instalar dependencias
+
+```bash
 pip install -r requirements.txt
-Paso 5: Crear el archivo .env
-Crea un archivo llamado .env en la raíz del proyecto (junto a requirements.txt) con el siguiente contenido:
+```
 
-env
+### Paso 5: Crear el archivo `.env`
+
+Crea un archivo llamado `.env` en la **raíz del proyecto** (junto a `requirements.txt`) con el siguiente contenido:
+
+```env
 DB_SERVER=.\MSSQLSERVER1
 DB_NAME=BibliotecaDB
 DB_DRIVER=ODBC Driver 17 for SQL Server
-Importante: Ajusta MSSQLSERVER1 al nombre de tu instancia de SQL Server.
+```
 
-Si tu servidor se llama MSSQLSERVER (instancia por defecto) → DB_SERVER=localhost
+>  **Importante:** Ajusta `MSSQLSERVER1` al nombre de tu instancia de SQL Server.
+> - Si tu servidor se llama `MSSQLSERVER` (instancia por defecto) → `DB_SERVER=localhost`
+> - Si es `SQLEXPRESS` → `DB_SERVER=.\SQLEXPRESS`
+> - Si es `MSSQLSERVER1` → `DB_SERVER=.\MSSQLSERVER1`
+>
+> Para saber el nombre de tu instancia, ejecuta en PowerShell:
+> ```powershell
+> Get-Service | Where-Object {$_.Name -like "MSSQL*"}
+> ```
 
-Si es SQLEXPRESS → DB_SERVER=.\SQLEXPRESS
+> **Este archivo NO se sube a GitHub** (está en `.gitignore` por seguridad).
 
-Si es MSSQLSERVER1 → DB_SERVER=.\MSSQLSERVER1
+### Paso 6: Crear la base de datos
 
-Para saber el nombre de tu instancia, ejecuta en PowerShell:
+1. Abre **SQL Server Management Studio (SSMS)**.
+2. Conéctate con **Windows Authentication** a tu instancia.
+3. Abre el archivo `database/schema.sql`.
+4. Presiona **F5** para ejecutarlo.
+5. Deberías ver: `Base de datos BibliotecaDB creada con datos de prueba.`
 
-powershell
-Get-Service | Where-Object {$_.Name -like "MSSQL*"}
-Este archivo NO se sube a GitHub (está en .gitignore por seguridad).
+**Verifica que se creó correctamente:**
 
-Paso 6: Crear la base de datos
-Abre SQL Server Management Studio (SSMS).
-
-Conéctate con Windows Authentication a tu instancia.
-
-Abre el archivo database/schema.sql.
-
-Presiona F5 para ejecutarlo.
-
-Deberías ver: Base de datos BibliotecaDB creada con datos de prueba.
-
-Verifica que se creó correctamente:
-
-sql
+```sql
 USE BibliotecaDB;
 SELECT COUNT(*) FROM Libros;   -- Debe devolver 10
 SELECT COUNT(*) FROM Usuarios; -- Debe devolver 3
-Paso 7: Ejecutar el servidor
-bash
+```
+
+### Paso 7: Ejecutar el servidor
+
+```bash
 uvicorn app.main:app --reload
+```
+
 Deberías ver:
 
-text
+```
 INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
 INFO:     Application startup complete.
-Paso 8: Abrir la documentación
+```
+
+### Paso 8: Abrir la documentación
+
 Abre tu navegador en:
 
-http://127.0.0.1:8000 → Mensaje de bienvenida
+- **http://127.0.0.1:8000** → Mensaje de bienvenida
+- **http://127.0.0.1:8000/docs** → 🎉 **Swagger UI** (documentación interactiva)
+- **http://127.0.0.1:8000/redoc** → Documentación alternativa (ReDoc)
 
-http://127.0.0.1:8000/docs → 🎉 Swagger UI (documentación interactiva)
+---
 
-http://127.0.0.1:8000/redoc → Documentación alternativa (ReDoc)
+##  Requisitos Funcionales Implementados
+
+- **RF1:** Registro, modificación y baja de libros con atributos (ISBN, título, autor, stock)
+-  **RF2:** Gestión de usuarios con roles diferenciados (Estudiante, Docente, Bibliotecario)
+-  **RF3:** Procesar préstamos validando disponibilidad física y límites de préstamos activos
+-  **RF4:** Registrar devoluciones calculando sanciones por retraso automáticamente
+-  **RF5:** Consultar catálogo mediante filtros multicriterio (en desarrollo)
+
+##  Flujo de Trabajo con Git
+
+### Ramas del proyecto
+
+- `main` → Rama estable (versiones finales)
+- `develop` → Rama de trabajo en equipo (¡aquí se trabaja!)
+
+### Cómo contribuir
+
+1. **Actualiza tu `develop` local:**
+
+   ```bash
+   git checkout develop
+   git pull origin develop
+   ```
+
+2. **Crea tu rama para la tarea:**
+
+   ```bash
+   git checkout -b feature/nombre-de-tu-tarea
+   ```
+
+3. **Trabaja en tu código y haz commits:**
+
+   ```bash
+   git add .
+   git commit -m "feat: descripción de lo que hiciste"
+   ```
+
+4. **Sube tu rama:**
+
+   ```bash
+   git push origin feature/nombre-de-tu-tarea
+   ```
+
+5. **Avisa al equipo** para hacer merge a `develop`.
+
+### Convención de commits
+
+- `feat:` → Nueva funcionalidad
+- `fix:` → Corrección de bug
+- `docs:` → Cambios en documentación
+- `refactor:` → Refactorización de código
+- `test:` → Añadir pruebas
+
+---
+
+##  Equipo de Desarrollo
+
+| Integrante | Rol | Responsabilidad |
+| :--- | :--- | :--- |
+| **Paulina Ramírez** | Integrante 1 | Capa de Datos (SQL Server, Modelos, Repositorios) |
+| **Adrián Moreno** | Integrante 2 | Backend | Capa de Lógica (Validaciones, Reglas de negocio) |
+| **Miriam López** | Integrante 3 | Frontend 1 | Capa de Presentación (Login, Libros, Usuarios) |
+| **Paola Palacios** | Integrante 4 | Frontend 2 + QA | Capa de Presentación (Préstamos, Devoluciones, Pruebas) |
+
+---
+
+## Solución de Problemas Comunes
+
+### Error: `Login failed for user`
+
+Verifica que tu usuario de Windows tenga permisos en SQL Server. Ejecuta en SSMS:
+
+```sql
+USE BibliotecaDB;
+CREATE USER [TU-PC\TU-USUARIO] FOR LOGIN [TU-PC\TU-USUARIO];
+ALTER ROLE db_owner ADD MEMBER [TU-PC\TU-USUARIO];
+```
+
+### Error: `Cannot open database "BibliotecaDB"`
+
+No has ejecutado el script `schema.sql`. Ve al Paso 6.
+
+### Error: `Data source name not found`
+
+Falta el driver ODBC. Descarga el "ODBC Driver 17 for SQL Server".
+
+### Error: `ModuleNotFoundError: No module named 'X'`
+
+No has activado el venv, o no instalaste las dependencias.
+
+```bash
+venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+### Error al compilar `pyodbc` o `pydantic-core`
+
+Tienes una versión muy nueva de Python. Usa Python 3.11 o 3.12.
