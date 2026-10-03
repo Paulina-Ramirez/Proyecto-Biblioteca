@@ -166,6 +166,12 @@ SELECT COUNT(*) FROM Usuarios; -- Debe devolver 3
 ```
 
 ### Paso 7: Ejecutar el servidor
+Antes de correr el proyecto, ejecuta la línea en terminal
+
+```bash
+pip install "pydantic[email]"
+```
+Corre el proyecto:
 
 ```bash
 uvicorn app.main:app --reload
