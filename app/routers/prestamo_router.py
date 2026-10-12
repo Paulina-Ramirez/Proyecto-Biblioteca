@@ -1,14 +1,22 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from app.config.database import get_db
 from app.repositories.prestamo_repository import PrestamoRepository
 from app.repositories.libro_repository import LibroRepository
-from app.repositories.usuario_repository import UsuarioRepository
 from app.repositories.sancion_repository import SancionRepository
 from app.schemas.prestamo_schema import PrestamoCreate, PrestamoResponse, PrestamoDevolucion
+from app.services.prestamo_service import (
+    ValidacionPrestamoResponse,
+    PrestamoNoPermitido,
+    validar_solicitud_prestamo,
+    registrar_prestamo,
+)
+from app.services.devolucion_service import (
+    DevolucionResponse, PrestamoYaDevuelto, procesar_devolucion,
+)
 
 router = APIRouter(
     prefix="/prestamos",
@@ -17,14 +25,18 @@ router = APIRouter(
 )
 
 # ==========================================
-# Reglas de negocio (RF3 y RF4)
+# Reglas de negocio (RF4)
+# El límite de préstamos activos (3) y las validaciones de préstamo
+# viven ahora en app/services/prestamo_service.py
 # ==========================================
-LIMITE_PRESTAMOS = {
-    "Estudiante": 3,
-    "Docente": 5,
-    "Bibliotecario": 10
-}
 MONTO_SANCION_POR_DIA = 5.00  # $5 por cada día de retraso
+
+# Código HTTP según el motivo del rechazo
+CODIGO_HTTP_RECHAZO = {
+    "NO_DISPONIBLE": status.HTTP_400_BAD_REQUEST,
+    "SANCION": status.HTTP_403_FORBIDDEN,
+    "LIMITE_PRESTAMOS": status.HTTP_400_BAD_REQUEST,
+}
 
 
 @router.get("/", response_model=List[PrestamoResponse], summary="Listar todos los préstamos")
@@ -42,6 +54,23 @@ def listar_prestamos_usuario(id_usuario: int, db: Session = Depends(get_db)):
     return PrestamoRepository.listar_por_usuario(db, id_usuario)
 
 
+# OJO: esta ruta debe ir ANTES de "/{id_prestamo}" para que "validar" no se
+# interprete como un id.
+@router.get("/validar", response_model=ValidacionPrestamoResponse, summary="Validar solicitud de préstamo (sin registrarlo)")
+def validar_prestamo(usuario_id: int, libro_id: int, db: Session = Depends(get_db)):
+    try:
+        resultado = validar_solicitud_prestamo(db, usuario_id, libro_id)
+    except LookupError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+    if not resultado.valido:
+        raise HTTPException(
+            status_code=CODIGO_HTTP_RECHAZO[resultado.motivo],
+            detail=resultado.model_dump(mode="json")
+        )
+    return resultado
+
+
 @router.get("/{id_prestamo}", response_model=PrestamoResponse, summary="Obtener un préstamo por ID")
 def obtener_prestamo(id_prestamo: int, db: Session = Depends(get_db)):
     prestamo = PrestamoRepository.obtener_por_id(db, id_prestamo)
@@ -52,81 +81,26 @@ def obtener_prestamo(id_prestamo: int, db: Session = Depends(get_db)):
 
 @router.post("/", response_model=PrestamoResponse, status_code=status.HTTP_201_CREATED, summary="Registrar un préstamo (RF3)")
 def crear_prestamo(prestamo: PrestamoCreate, db: Session = Depends(get_db)):
-    # 1. Validar que el usuario exista
-    usuario = UsuarioRepository.obtener_por_id(db, prestamo.id_usuario)
-    if not usuario:
-        raise HTTPException(status_code=404, detail=f"Usuario con ID {prestamo.id_usuario} no encontrado")
-    
-    # 2. Validar que el libro exista
-    libro = LibroRepository.obtener_por_id(db, prestamo.id_libro)
-    if not libro:
-        raise HTTPException(status_code=404, detail=f"Libro con ID {prestamo.id_libro} no encontrado")
-    
-    # 3. Validar disponibilidad física (RF3)
-    if libro.stock_disponible <= 0:
-        raise HTTPException(status_code=400, detail=f"No hay ejemplares disponibles del libro '{libro.titulo}'")
-    
-    # 4. Validar que el usuario no tenga sanciones pendientes (RF4)
-    if SancionRepository.usuario_tiene_sancion_pendiente(db, prestamo.id_usuario):
-        raise HTTPException(status_code=403, detail=f"El usuario {usuario.nombre} tiene sanciones pendientes. Debe pagarlas antes de pedir más préstamos.")
-    
-    # 5. Validar límite de préstamos activos (RF3)
-    prestamos_activos = PrestamoRepository.contar_activos_por_usuario(db, prestamo.id_usuario)
-    limite = LIMITE_PRESTAMOS.get(usuario.rol, 3)
-    if prestamos_activos >= limite:
+    """
+    Valida (disponibilidad -> sanciones -> límite de 3 activos), crea el préstamo
+    y descuenta el stock disponible en una sola transacción.
+    """
+    try:
+        return registrar_prestamo(db, prestamo)
+    except LookupError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except PrestamoNoPermitido as e:
         raise HTTPException(
-            status_code=400,
-            detail=f"El usuario {usuario.nombre} ({usuario.rol}) ya tiene {prestamos_activos} préstamos activos. Límite: {limite}."
+            status_code=CODIGO_HTTP_RECHAZO[e.resultado.motivo],
+            detail=e.resultado.model_dump(mode="json")
         )
-    
-    # 6. Calcular fecha de vencimiento
-    fecha_vencimiento = datetime.now() + timedelta(days=prestamo.dias_prestamo)
-    
-    # 7. Crear el préstamo
-    nuevo_prestamo = PrestamoRepository.crear(
-        db,
-        id_usuario=prestamo.id_usuario,
-        id_libro=prestamo.id_libro,
-        fecha_vencimiento=fecha_vencimiento
-    )
-    
-    # 8. Reducir el stock disponible
-    LibroRepository.actualizar_stock(db, libro.id_libro, libro.stock_disponible - 1)
-    
-    return nuevo_prestamo
 
 
-@router.post("/devolucion", response_model=PrestamoResponse, summary="Registrar devolución (RF4)")
+@router.post("/devolucion", response_model=DevolucionResponse, summary="Registrar devolución (RF4)")
 def registrar_devolucion(devolucion: PrestamoDevolucion, id_prestamo: int, db: Session = Depends(get_db)):
-    # 1. Validar que el préstamo exista
-    prestamo = PrestamoRepository.obtener_por_id(db, id_prestamo)
-    if not prestamo:
-        raise HTTPException(status_code=404, detail=f"Préstamo con ID {id_prestamo} no encontrado")
-    
-    if prestamo.estado == "Devuelto":
-        raise HTTPException(status_code=400, detail="Este préstamo ya fue devuelto")
-    
-    # 2. Calcular fecha de devolución
-    fecha_dev = devolucion.fecha_devolucion or datetime.now()
-    
-    # 3. Registrar la devolución
-    prestamo_actualizado = PrestamoRepository.registrar_devolucion(db, id_prestamo, fecha_dev)
-    
-    # 4. Aumentar el stock disponible del libro
-    libro = LibroRepository.obtener_por_id(db, prestamo.id_libro)
-    if libro:
-        LibroRepository.actualizar_stock(db, libro.id_libro, libro.stock_disponible + 1)
-    
-    # 5. Calcular sanción si hay retraso (RF4)
-    if fecha_dev > prestamo.fecha_vencimiento:
-        dias_retraso = (fecha_dev - prestamo.fecha_vencimiento).days
-        monto = dias_retraso * MONTO_SANCION_POR_DIA
-        SancionRepository.crear(
-            db,
-            id_usuario=prestamo.id_usuario,
-            id_prestamo=prestamo.id_prestamo,
-            monto=monto,
-            dias_retraso=dias_retraso
-        )
-    
-    return prestamo_actualizado
+    try:
+        return procesar_devolucion(db, id_prestamo, devolucion.fecha_devolucion)
+    except LookupError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except PrestamoYaDevuelto as e:
+        raise HTTPException(status_code=400, detail=str(e))

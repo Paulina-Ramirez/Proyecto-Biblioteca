@@ -37,9 +37,40 @@ class LibroRepository:
         return libro
 
     @staticmethod
+    def descontar_stock(db: Session, id_libro: int, cantidad: int = 1, commit: bool = True) -> int:
+        """
+        Descuenta 'cantidad' de stock_disponible con un UPDATE atómico que solo
+        se aplica si queda stock suficiente (evita stock negativo y condiciones
+        de carrera). Devuelve el número de filas afectadas: 1 si se descontó,
+        0 si no había stock suficiente o el libro no existe.
+        Con commit=False no confirma, para agrupar con otras operaciones.
+        """
+        filas = db.query(Libro).filter(
+            Libro.id_libro == id_libro,
+            Libro.stock_disponible >= cantidad
+        ).update(
+            {Libro.stock_disponible: Libro.stock_disponible - cantidad},
+            synchronize_session=False
+        )
+        if commit:
+            db.commit()
+        return filas
+
+    @staticmethod
     def eliminar(db: Session, id_libro: int):
         libro = db.query(Libro).filter(Libro.id_libro == id_libro).first()
         if libro:
             db.delete(libro)
             db.commit()
         return libro
+
+    @staticmethod
+    def aumentar_stock(db: Session, id_libro: int, cantidad: int = 1, commit: bool = True) -> int:
+        """Aumenta stock_disponible con un UPDATE atómico. Devuelve filas afectadas."""
+        filas = db.query(Libro).filter(Libro.id_libro == id_libro).update(
+            {Libro.stock_disponible: Libro.stock_disponible + cantidad},
+            synchronize_session=False
+        )
+        if commit:
+            db.commit()
+        return filas

@@ -5,7 +5,7 @@ from app.models.sancion import Sancion
 class SancionRepository:
 
     @staticmethod
-    def crear(db: Session, id_usuario: int, id_prestamo: int, monto: Decimal, dias_retraso: int):
+    def crear(db: Session, id_usuario: int, id_prestamo: int, monto: Decimal, dias_retraso: int, commit: bool = True):
         nueva = Sancion(
             id_usuario=id_usuario,
             id_prestamo=id_prestamo,
@@ -14,7 +14,10 @@ class SancionRepository:
             pagada=False
         )
         db.add(nueva)
-        db.commit()
+        if commit:
+            db.commit()
+        else:
+            db.flush()
         db.refresh(nueva)
         return nueva
 
