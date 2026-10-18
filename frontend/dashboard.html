@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Inicio | Cozy Biblioteca</title>
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="512x512" href="favicon-cozy-cerezo.png">
+  <meta name="theme-color" content="#342D3D">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div id="app-shell"></div>
+  <div id="toast" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- Estructura del dashboard: se mantiene en HTML y se clona desde dashboard.js. -->
+  <template id="dashboard-template">
+    <div class="hd dashboard-heading">
+      <div>
+        <span class="dash-eyebrow">TU ESPACIO DE LECTURA</span>
+        <h1>Hola, <span id="dashboard-first-name"></span> <span class="dash-flower" aria-hidden="true">✿</span></h1>
+        <span class="mu">Un pequeño resumen de la biblioteca para hoy.</span>
+      </div>
+      <a class="btn dashboard-main-action" href="libros.html">Explorar catálogo <span aria-hidden="true">↗</span></a>
+    </div>
+
+    <section class="stats">
+      <article class="card stat stat-books">
+        <div class="stat-label"><span class="dash-stat-icon" aria-hidden="true">♡</span><span class="mu">Libros en catálogo</span></div>
+        <b id="stat-books">0</b><small>Títulos registrados</small>
+      </article>
+      <article class="card stat stat-available">
+        <div class="stat-label"><span class="dash-stat-icon" aria-hidden="true">✧</span><span class="mu">Ejemplares disponibles</span></div>
+        <b id="stat-available">0</b><small>Listos para préstamo</small>
+      </article>
+      <article class="card stat stat-loans">
+        <div class="stat-label"><span class="dash-stat-icon" aria-hidden="true">↗</span><span class="mu" id="stat-loans-label">Préstamos activos</span></div>
+        <b id="stat-loans">0</b><small id="stat-loans-description">Pendientes de devolución</small>
+      </article>
+      <article class="card stat stat-fines">
+        <div class="stat-label"><span class="dash-stat-icon" aria-hidden="true">♡</span><span class="mu" id="stat-fines-label">Sanciones pendientes</span></div>
+        <b id="stat-fines">0</b><small>Revisa el detalle en sanciones</small>
+      </article>
+    </section>
+
+    <section class="dashboard-lower">
+      <article class="card dash-panel category-panel">
+        <div class="dash-panel-heading">
+          <div><span class="dash-eyebrow">LA COLECCIÓN</span><h2>Categorías populares</h2></div>
+          <span class="dash-heading-flower" aria-hidden="true">✿</span>
+        </div>
+        <div id="category-empty" class="empty" hidden>Aún no hay libros para mostrar categorías.</div>
+        <div id="category-content" class="category-content" hidden>
+          <div id="category-donut" class="category-donut" role="img" aria-label="Gráfica de dona de categorías">
+            <div class="donut-hole"><strong id="donut-total">0</strong><span>libros</span></div>
+          </div>
+          <div id="category-legend" class="category-legend"></div>
+        </div>
+        <p class="dash-footnote" id="category-footnote">Distribución calculada a partir de los libros registrados.</p>
+      </article>
+
+      <article class="card dash-panel activity-panel">
+        <div class="dash-panel-heading">
+          <div><span class="dash-eyebrow">LO QUE HA PASADO</span><h2>Actividad reciente</h2></div>
+          <span class="dash-heading-flower" aria-hidden="true">♡</span>
+        </div>
+        <div id="activity-empty" class="empty" hidden>Todavía no hay actividad registrada para mostrar.</div>
+        <div id="activity-list" class="activity-list"></div>
+        <p class="dash-footnote" id="activity-footnote">Basado en fechas de registro de libros y préstamos disponibles para tu cuenta.</p>
+      </article>
+    </section>
+
+    <section class="card quick-panel">
+      <div class="dash-panel-heading">
+        <div><span class="dash-eyebrow">A UN CLIC</span><h2>Accesos rápidos</h2></div>
+      </div>
+      <div class="quick-links">
+        <a class="quick-link" href="libros.html">
+          <span class="quick-link-icon" aria-hidden="true">▤</span>
+          <span><strong>Explorar catálogo</strong><small>Busca tu próxima lectura</small></span>
+          <span class="quick-arrow" aria-hidden="true">↗</span>
+        </a>
+        <a class="quick-link" href="prestamos.html">
+          <span class="quick-link-icon quick-lilac" aria-hidden="true">▣</span>
+          <span><strong id="quick-loans-title">Mis préstamos</strong><small>Consulta fechas y estados</small></span>
+          <span class="quick-arrow" aria-hidden="true">↗</span>
+        </a>
+        <a class="quick-link" href="sanciones.html">
+          <span class="quick-link-icon quick-peach" aria-hidden="true">♡</span>
+          <span><strong id="quick-fines-title">Mis sanciones</strong><small>Consulta el estado de pago</small></span>
+          <span class="quick-arrow" aria-hidden="true">↗</span>
+        </a>
+      </div>
+    </section>
+  </template>
+
+  <!-- Plantillas de elementos repetidos. JavaScript solo agrega los datos. -->
+  <template id="category-legend-template">
+    <div class="legend-row">
+      <span class="legend-dot"></span>
+      <span class="legend-name"></span>
+      <strong class="legend-count"></strong>
+      <small class="legend-percent"></small>
+    </div>
+  </template>
+
+  <template id="activity-item-template">
+    <div class="activity-item">
+      <span class="activity-icon"></span>
+      <div class="activity-copy"><strong class="activity-title"></strong><span class="activity-detail"></span></div>
+      <time class="activity-date"></time>
+    </div>
+  </template>
+
+  <script src="js/common.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>
