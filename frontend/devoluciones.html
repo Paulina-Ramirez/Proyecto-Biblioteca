@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Devoluciones | Cozy Biblioteca</title>
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <meta name="theme-color" content="#342D3D">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div id="app-shell"></div>
+    <div id="toast"></div>
+
+    <template id="returns-page-template">
+        <div class="hd">
+            <div>
+                <h1>Registrar Devolución</h1>
+                <span class="mu">Ingresa el ID del préstamo para calcular sanciones automáticamente.</span>
+            </div>
+        </div>
+
+        <section class="card" style="max-width: 600px;">
+            <label for="return-loan-id">ID del Préstamo:</label>
+            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <input id="return-loan-id" type="number" placeholder="Ej. 5" style="flex: 1;">
+                <button class="btn" id="search-loan-btn">Buscar</button>
+            </div>
+
+            <div id="loan-details" hidden>
+                <hr style="border: 0; border-top: 1px solid var(--line); margin: 20px 0;">
+                <h3>Detalles del Préstamo</h3>
+                <p><strong>Libro:</strong> <span id="detail-book"></span></p>
+                <p><strong>Usuario:</strong> <span id="detail-user"></span></p>
+                <p><strong>Fecha de Vencimiento:</strong> <span id="detail-due-date"></span></p>
+
+                <label for="return-date" style="margin-top: 15px;">Fecha real de devolución:</label>
+                <input id="return-date" type="date">
+
+                <div class="card" id="fine-calculation" style="margin-top: 15px; background: var(--surface-soft);">
+                    <h4 id="fine-result" style="margin: 0;">Calculando...</h4>
+                </div>
+
+                <button class="btn full" id="confirm-return-btn" style="margin-top: 20px;">Confirmar Devolución</button>
+            </div>
+            
+            <div id="return-error" class="err"></div>
+        </section>
+    </template>
+
+    <script src="js/common.js"></script>
+    <script src="js/devoluciones.js"></script>
+</body>
+</html>

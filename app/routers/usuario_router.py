@@ -63,3 +63,29 @@ def eliminar_usuario(id_usuario: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail=f"Usuario con ID {id_usuario} no encontrado")
     UsuarioRepository.eliminar(db, id_usuario)
     return None
+
+# --- RUTA TEMPORAL DE LOGIN PARA QUE EL FRONTEND PUEDA PROBAR ---
+@router.post("/login", summary="Iniciar sesión")
+def login_usuario(datos: dict, db: Session = Depends(get_db)):
+    email = datos.get("email")
+    password = datos.get("password")
+    
+    if not email or not password:
+        raise HTTPException(status_code=400, detail="Email y contraseña son requeridos")
+        
+    usuario = UsuarioRepository.obtener_por_email(db, email)
+    
+    if not usuario:
+        raise HTTPException(status_code=401, detail="Credenciales incorrectas")
+        
+    # En el archivo original, el hash se guarda como "hash_{password}". 
+    # Lo comparamos así para que funcione ahora:
+    if usuario.password_hash != f"hash_{password}":
+        raise HTTPException(status_code=401, detail="Credenciales incorrectas")
+        
+    return {
+        "mensaje": "Login exitoso", 
+        "id_usuario": usuario.id_usuario,
+        "nombre": usuario.nombre,
+        "rol": usuario.rol
+    }

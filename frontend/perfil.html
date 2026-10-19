@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Mi Perfil | Cozy Biblioteca</title>
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <meta name="theme-color" content="#342D3D">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div id="app-shell"></div>
+    <div id="toast"></div>
+
+    <template id="profile-page-template">
+        <div class="hd">
+            <div>
+                <h1>Mi Perfil</h1>
+                <span class="mu">Tu información y actividad reciente.</span>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px;">
+            <!-- Tarjeta de información -->
+            <div class="card">
+                <div class="av" style="width: 80px; height: 80px; font-size: 28px; margin: 0 auto 15px;" id="profile-avatar">?</div>
+                <h2 style="text-align: center; margin-bottom: 5px;" id="profile-name"></h2>
+                <p style="text-align: center; color: var(--muted); margin-bottom: 20px;" id="profile-email"></p>
+                
+                <p><strong>Rol:</strong> <span class="pill" id="profile-role"></span></p>
+                <p><strong>Estado:</strong> <span class="pill ok">Activo</span></p>
+                <p><strong>Miembro desde:</strong> <span id="profile-date"></span></p>
+            </div>
+
+            <!-- Historial de préstamos -->
+            <div class="card">
+                <h2>Mi Historial de Préstamos</h2>
+                <div style="overflow: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Libro</th>
+                                <th>Préstamo</th>
+                                <th>Vencimiento</th>
+                                <th>Devolución</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="profile-loans-rows"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="profile-loan-row-template">
+        <tr>
+            <td data-field="book"></td>
+            <td data-field="loan-date"></td>
+            <td data-field="due-date"></td>
+            <td data-field="return-date"></td>
+            <td><span class="pill" data-field="status"></span></td>
+        </tr>
+    </template>
+
+    <script src="js/common.js"></script>
+    <script src="js/perfil.js"></script>
+</body>
+</html>

@@ -97,11 +97,11 @@ def crear_prestamo(prestamo: PrestamoCreate, db: Session = Depends(get_db)):
 
 
 @router.post("/devolucion", response_model=PrestamoResponse, summary="Registrar devolución (RF4)")
-def registrar_devolucion(devolucion: PrestamoDevolucion, id_prestamo: int, db: Session = Depends(get_db)):
+def registrar_devolucion(devolucion: PrestamoDevolucion, db: Session = Depends(get_db)):
     # 1. Validar que el préstamo exista
-    prestamo = PrestamoRepository.obtener_por_id(db, id_prestamo)
+    prestamo = PrestamoRepository.obtener_por_id(db, devolucion.id_prestamo)
     if not prestamo:
-        raise HTTPException(status_code=404, detail=f"Préstamo con ID {id_prestamo} no encontrado")
+        raise HTTPException(status_code=404, detail=f"Préstamo con ID {devolucion.id_prestamo} no encontrado")
     
     if prestamo.estado == "Devuelto":
         raise HTTPException(status_code=400, detail="Este préstamo ya fue devuelto")
@@ -110,7 +110,7 @@ def registrar_devolucion(devolucion: PrestamoDevolucion, id_prestamo: int, db: S
     fecha_dev = devolucion.fecha_devolucion or datetime.now()
     
     # 3. Registrar la devolución
-    prestamo_actualizado = PrestamoRepository.registrar_devolucion(db, id_prestamo, fecha_dev)
+    prestamo_actualizado = PrestamoRepository.registrar_devolucion(db, devolucion.id_prestamo, fecha_dev)
     
     # 4. Aumentar el stock disponible del libro
     libro = LibroRepository.obtener_por_id(db, prestamo.id_libro)

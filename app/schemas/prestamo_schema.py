@@ -24,3 +24,4 @@ class PrestamoResponse(BaseModel):
 # Schema para DEVOLVER un préstamo
 class PrestamoDevolucion(BaseModel):
     fecha_devolucion: Optional[datetime] = Field(None, description="Fecha de devolución (si no se envía, se usa la fecha actual)")
+    id_prestamo: int = Field(..., description="ID del préstamo a devolver")

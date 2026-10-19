@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from app.config.database import engine, Base
 from app.models import libro, usuario, prestamo, sancion
 
@@ -9,6 +10,15 @@ app = FastAPI(
     title="API Biblioteca",
     description="Sistema de Gestión de Biblioteca - Arquitectura N-Tier",
     version="1.0.0"
+)
+
+# Configurar CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Registrar routers
